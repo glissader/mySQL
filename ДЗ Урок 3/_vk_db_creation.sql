@@ -154,3 +154,24 @@ FOREIGN KEY (user_id) REFERENCES vk.users(id);
 ALTER TABLE vk.profiles 
 ADD CONSTRAINT profiles_fk_1 
 FOREIGN KEY (photo_id) REFERENCES media(id);
+
+DROP TABLE IF EXISTS likes_messages;
+CREATE TABLE likes_messages(
+	id SERIAL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    message_id BIGINT UNSIGNED NOT NULL,
+    created_at DATETIME DEFAULT NOW(),
+    
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (message_id) REFERENCES messages(id)
+);
+
+DROP TABLE IF EXISTS likes_users;
+CREATE TABLE likes_users(
+	id SERIAL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    created_at DATETIME DEFAULT NOW(),
+    
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
