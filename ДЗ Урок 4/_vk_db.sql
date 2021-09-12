@@ -10,9 +10,33 @@ CREATE TABLE users (
     email VARCHAR(120) UNIQUE,
  	password_hash VARCHAR(100), -- 123456 => vzx;clvgkajrpo9udfxvsldkrn24l5456345t
 	phone BIGINT UNSIGNED UNIQUE, 
-	
     INDEX users_firstname_lastname_idx(firstname, lastname)
 ) COMMENT 'юзеры';
+
+DROP TABLE IF EXISTS media_types;
+CREATE TABLE media_types(
+	id SERIAL,
+    name VARCHAR(255), -- записей мало, поэтому в индексе нет необходимости
+    created_at DATETIME DEFAULT NOW(),
+    updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP
+);
+
+DROP TABLE IF EXISTS media;
+CREATE TABLE media(
+	id SERIAL,
+    media_type_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
+  	body text,
+    filename VARCHAR(255),
+    -- file blob,    	
+    size INT,
+	metadata JSON,
+    created_at DATETIME DEFAULT NOW(),
+    updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (media_type_id) REFERENCES media_types(id)
+);
 
 DROP TABLE IF EXISTS `profiles`;
 CREATE TABLE `profiles` (
@@ -21,15 +45,10 @@ CREATE TABLE `profiles` (
     birthday DATE,
 	photo_id BIGINT UNSIGNED NULL,
     created_at DATETIME DEFAULT NOW(),
-    hometown VARCHAR(100)
-	
-    -- , FOREIGN KEY (photo_id) REFERENCES media(id) -- пока рано, т.к. таблицы media еще нет
+    hometown VARCHAR(100),
+	FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (photo_id) REFERENCES media(id)
 );
-
-ALTER TABLE `profiles` ADD CONSTRAINT fk_user_id
-    FOREIGN KEY (user_id) REFERENCES users(id)
-    ON UPDATE CASCADE -- (значение по умолчанию)
-    ON DELETE RESTRICT; -- (значение по умолчанию)
 
 DROP TABLE IF EXISTS messages;
 CREATE TABLE messages (
@@ -82,45 +101,14 @@ CREATE TABLE users_communities(
     FOREIGN KEY (community_id) REFERENCES communities(id)
 );
 
-DROP TABLE IF EXISTS media_types;
-CREATE TABLE media_types(
-	id SERIAL,
-    name VARCHAR(255), -- записей мало, поэтому в индексе нет необходимости
-    created_at DATETIME DEFAULT NOW(),
-    updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP
-);
-
-DROP TABLE IF EXISTS media;
-CREATE TABLE media(
-	id SERIAL,
-    media_type_id BIGINT UNSIGNED NOT NULL,
-    user_id BIGINT UNSIGNED NOT NULL,
-  	body text,
-    filename VARCHAR(255),
-    -- file blob,    	
-    size INT,
-	metadata JSON,
-    created_at DATETIME DEFAULT NOW(),
-    updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (media_type_id) REFERENCES media_types(id)
-);
-
 DROP TABLE IF EXISTS likes;
 CREATE TABLE likes(
 	id SERIAL,
     user_id BIGINT UNSIGNED NOT NULL,
     media_id BIGINT UNSIGNED NOT NULL,
-    created_at DATETIME DEFAULT NOW()
-
-    -- PRIMARY KEY (user_id, media_id) – можно было и так вместо id в качестве PK
-  	-- слишком увлекаться индексами тоже опасно, рациональнее их добавлять по мере необходимости (напр., провисают по времени какие-то запросы)  
-
-/* намеренно забыли, чтобы позднее увидеть их отсутствие в ER-диаграмме
-    , FOREIGN KEY (user_id) REFERENCES users(id)
-    , FOREIGN KEY (media_id) REFERENCES media(id)
-*/
+    created_at DATETIME DEFAULT NOW(), 
+    FOREIGN KEY (user_id) REFERENCES users(id), 
+    FOREIGN KEY (media_id) REFERENCES media(id)
 );
 
 DROP TABLE IF EXISTS `photo_albums`;
@@ -143,17 +131,6 @@ CREATE TABLE `photos` (
     FOREIGN KEY (media_id) REFERENCES media(id)
 );
 
-ALTER TABLE vk.likes 
-ADD CONSTRAINT likes_fk 
-FOREIGN KEY (media_id) REFERENCES vk.media(id);
-
-ALTER TABLE vk.likes 
-ADD CONSTRAINT likes_fk_1 
-FOREIGN KEY (user_id) REFERENCES vk.users(id);
-
-ALTER TABLE vk.profiles 
-ADD CONSTRAINT profiles_fk_1 
-FOREIGN KEY (photo_id) REFERENCES media(id);
 
 DROP TABLE IF EXISTS likes_messages;
 CREATE TABLE likes_messages(
@@ -174,4 +151,3 @@ CREATE TABLE likes_users(
     
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
-
