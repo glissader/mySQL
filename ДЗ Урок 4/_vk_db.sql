@@ -139,8 +139,8 @@ CREATE TABLE likes_messages(
     message_id BIGINT UNSIGNED NOT NULL,
     created_at DATETIME DEFAULT NOW(),
     
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (message_id) REFERENCES messages(id)
+    FOREIGN KEY (user_id) REFERENCES users(id) on delete cascade,
+    FOREIGN KEY (message_id) REFERENCES messages(id) on delete cascade
 );
 
 DROP TABLE IF EXISTS likes_users;
@@ -1287,3 +1287,134 @@ INSERT INTO `friend_requests` (`initiator_user_id`, `target_user_id`, `status`, 
 INSERT INTO `friend_requests` (`initiator_user_id`, `target_user_id`, `status`, `requested_at`, `updated_at`) VALUES ('209', '205', 'unfriended', '2016-08-19 01:55:17', '1973-02-08 09:33:07');
 INSERT INTO `friend_requests` (`initiator_user_id`, `target_user_id`, `status`, `requested_at`, `updated_at`) VALUES ('209', '227', 'declined', '2007-07-17 23:37:08', '1982-01-26 00:03:44');
 INSERT INTO `friend_requests` (`initiator_user_id`, `target_user_id`, `status`, `requested_at`, `updated_at`) VALUES ('209', '208', 'requested', '2011-08-03 14:41:10', '1991-12-10 20:48:51');
+
+DROP DATABASE IF EXISTS vk2;
+CREATE DATABASE vk2;
+USE vk2;
+
+DROP TABLE IF EXISTS users;
+CREATE TABLE users (
+	id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, 
+    firstname VARCHAR(50),
+    lastname VARCHAR(50) COMMENT 'Фамилия', -- COMMENT на случай, если имя неочевидное
+    email VARCHAR(120) UNIQUE,
+ 	password_hash VARCHAR(100), -- 123456 => vzx;clvgkajrpo9udfxvsldkrn24l5456345t
+	phone BIGINT UNSIGNED UNIQUE, 
+    INDEX users_firstname_lastname_idx(firstname, lastname)
+) COMMENT 'юзеры';
+
+INSERT INTO `users` (`id`, `firstname`, `lastname`, `email`, `password_hash`, `phone`) VALUES ('100', 'Marlene', 'Schumm', 'hyman673@example.org', 'c06a532305008d897e70a58653d8e42e0d1cea83', '4938339');
+INSERT INTO `users` (`id`, `firstname`, `lastname`, `email`, `password_hash`, `phone`) VALUES ('400', 'Michele', 'Rippin', 'fcassin@example.com', '87528676915a936dd4a2161781b9ac04afd67b86', '9806002444');
+
+-- DML (data manipulation language) - язык манипулирования данными
+-- CRUD (create, read, update, delete, truncate)
+
+use vk;
+
+INSERT INTO `users` (`id`, `firstname`, `lastname`, `email`, `phone`) 
+VALUES ('58', 'Dean', 'Satterfield', 'orin69@example.net', '9160120629');
+
+INSERT INTO users VALUES
+('5', 'Reuben', 'Nienow', 'arlo515@example.org', NULL, 9160120621),
+('6', 'Reuben', 'Nienow', 'arlo516@example.org', NULL, 9160120622),
+('7', 'Reuben', 'Nienow', 'arlo517@example.org', NULL, 9160120623),
+('8', 'Reuben', 'Nienow', 'arlo518@example.org', NULL, 9160120624)
+;
+
+INSERT INTO users
+SET
+	firstname = 'Иван',
+	lastname = 'Диванов',
+	email = 'ivan@mail.ru',
+	phone = '987654321'
+;
+
+INSERT INTO `users` 
+	(`id`, `firstname`, `lastname`, `email`, `phone`) 
+select 
+ 	`id`, `firstname`, `lastname`, `email`, `phone`
+from vk2.users
+where id = 100
+;
+
+-- select
+SELECT 10+20;
+
+SELECT distinct firstname, lastname
+FROM users;
+
+SELECT *
+FROM users
+LIMIT 1 offset 5;
+
+SELECT *
+FROM users
+WHERE id = 5 OR firstname = 'Reuben';
+
+SELECT *
+FROM users
+WHERE id IN (200, 202, 203, 204);
+
+-- UPDATE
+
+-- отправка запроса в друзья
+INSERT INTO friend_requests (`initiator_user_id`, `target_user_id`, `status`)
+VALUES ('201', '203', 'requested');
+
+INSERT INTO friend_requests (`initiator_user_id`, `target_user_id`, `status`)
+VALUES ('217', '201', 'requested');
+
+INSERT INTO friend_requests (`initiator_user_id`, `target_user_id`, `status`)
+VALUES ('217', '215', 'requested');
+
+INSERT INTO friend_requests (`initiator_user_id`, `target_user_id`, `status`)
+VALUES ('219', '215', 'requested');
+
+-- отклонить запрос в друзья
+UPDATE friend_requests
+SET 
+	status = 'declined',
+	updated_at = now()
+WHERE
+	initiator_user_id = 217 and target_user_id = 215
+-- 	and status = 'requested'
+	;
+
+-- DELETE
+
+-- добавим несколько пользователей
+insert into users (id, firstname, lastname, email, phone) values
+('102', 'Reuben', 'Nienow', 'arlo50102@example.org', '9374071116'),
+('200', 'Frederik', 'Upton', 'terrence.cartwright@example.org', '9127498182'),
+('302', 'Unique', 'Windler', 'rupert55@example.org', '9921090703'),
+('402', 'Norene', 'West', 'rebekah29@example.net', '9592139196'),
+('500', 'Frederick', 'Effertz', 'von.bridget@example.net', '9909791725')
+;
+
+-- добавим несколько сообщений
+INSERT INTO messages values
+('201','201','202','Voluptatem ut quaerat quia. Pariatur esse amet ratione qui quia. In necessitatibus reprehenderit et. Nam accusantium aut qui quae nesciunt non.','1995-08-28 22:44:29'),
+('202','202','201','Sint dolores et debitis est ducimus. Aut et quia beatae minus. Ipsa rerum totam modi sunt sed. Voluptas atque eum et odio ea molestias ipsam architecto.',now()),
+('203','203','201','Sed mollitia quo sequi nisi est tenetur at rerum. Sed quibusdam illo ea facilis nemo sequi. Et tempora repudiandae saepe quo.','1993-09-14 19:45:58'),
+('204','201','203','Quod dicta omnis placeat id et officiis et. Beatae enim aut aliquid neque occaecati odit. Facere eum distinctio assumenda omnis est delectus magnam.','1985-11-25 16:56:25'),
+('205','201','205','Voluptas omnis enim quia porro debitis facilis eaque ut. Id inventore non corrupti doloremque consequuntur. Molestiae molestiae deleniti exercitationem sunt qui ea accusamus deserunt.','1999-09-19 04:35:46')
+;
+
+delete from messages
+where from_user_id = 201
+;
+
+delete from users
+where id = 400;
+
+-- TRUNCATE
+
+delete from messages;
+-- truncate table messages;
+
+INSERT INTO messages (from_user_id, to_user_id, body, created_at) values
+('201','202','Voluptatem ut quaerat quia. Pariatur esse amet ratione qui quia. In necessitatibus reprehenderit et. Nam accusantium aut qui quae nesciunt non.','1995-08-28 22:44:29'),
+('202','201','Sint dolores et debitis est ducimus. Aut et quia beatae minus. Ipsa rerum totam modi sunt sed. Voluptas atque eum et odio ea molestias ipsam architecto.',now()),
+('203','201','Sed mollitia quo sequi nisi est tenetur at rerum. Sed quibusdam illo ea facilis nemo sequi. Et tempora repudiandae saepe quo.','1993-09-14 19:45:58'),
+('201','203','Quod dicta omnis placeat id et officiis et. Beatae enim aut aliquid neque occaecati odit. Facere eum distinctio assumenda omnis est delectus magnam.','1985-11-25 16:56:25'),
+('201','205','Voluptas omnis enim quia porro debitis facilis eaque ut. Id inventore non corrupti doloremque consequuntur. Molestiae molestiae deleniti exercitationem sunt qui ea accusamus deserunt.','1999-09-19 04:35:46');
