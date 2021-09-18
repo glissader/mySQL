@@ -1630,34 +1630,34 @@ INSERT INTO `photos` (`id`, `album_id`, `media_id`)
 VALUES ('100', '100', '100');
 
 INSERT INTO `messages` (`id`, `from_user_id`, `to_user_id`, `body`, `created_at`)
-VALUES ('1', '201', '201',
+VALUES ('1', '202', '201',
         'Incidunt necessitatibus accusamus velit inventore. Voluptates qui esse deserunt voluptatem dolorem iusto aspernatur soluta. Et ut quibusdam inventore at qui.',
         '2005-07-16 14:13:22');
 INSERT INTO `messages` (`id`, `from_user_id`, `to_user_id`, `body`, `created_at`)
-VALUES ('2', '202', '202',
+VALUES ('2', '203', '201',
         'Sed distinctio nihil iusto molestias et aperiam facere. Sapiente aut qui placeat molestiae quis nihil eveniet quam. Corrupti necessitatibus eos est repudiandae itaque et non.',
         '1970-06-18 04:07:38');
 INSERT INTO `messages` (`id`, `from_user_id`, `to_user_id`, `body`, `created_at`)
-VALUES ('3', '203', '203',
+VALUES ('3', '203', '201',
         'Cum est velit sint et. Magnam veritatis minima odit amet. Non repellendus illum voluptates optio explicabo vitae dolorem. Perferendis magnam omnis recusandae voluptatem labore mollitia.',
         '1987-09-14 06:14:57');
 INSERT INTO `messages` (`id`, `from_user_id`, `to_user_id`, `body`, `created_at`)
-VALUES ('4', '205', '205',
+VALUES ('4', '205', '201',
         'Fugiat eum explicabo vel voluptatem sunt dolorum. Aliquam quasi sed magnam minus vero id. Numquam dolor autem at praesentium. Non ipsum fuga consequuntur.',
         '2003-09-15 16:22:20');
 INSERT INTO `messages` (`id`, `from_user_id`, `to_user_id`, `body`, `created_at`)
-VALUES ('5', '208', '208',
+VALUES ('5', '208', '201',
         'Sunt saepe iure fugiat pariatur. Nam odio dolorum et ut quis consequatur. Laborum id rem aut temporibus placeat dolor nobis. Qui ut in similique est. Veniam eos delectus et labore qui totam alias.',
         '1982-01-10 19:20:55');
 INSERT INTO `messages` (`id`, `from_user_id`, `to_user_id`, `body`, `created_at`)
-VALUES ('6', '209', '209', 'Alias et et quo qui omnis perferendis repellendus. Omnis esse temporibus aut dolorum quis.',
+VALUES ('6', '209', '201', 'Alias et et quo qui omnis perferendis repellendus. Omnis esse temporibus aut dolorum quis.',
         '1999-09-16 16:39:24');
 INSERT INTO `messages` (`id`, `from_user_id`, `to_user_id`, `body`, `created_at`)
-VALUES ('7', '212', '212',
+VALUES ('7', '212', '201',
         'Consequuntur et quibusdam impedit voluptates laboriosam quia aspernatur. Sed sed eos eaque aut tempore. Adipisci sit aliquid quo sint. Aut voluptatem aspernatur incidunt sed dolor numquam consequuntur aspernatur.',
         '1987-09-25 07:33:58');
 INSERT INTO `messages` (`id`, `from_user_id`, `to_user_id`, `body`, `created_at`)
-VALUES ('8', '214', '214',
+VALUES ('8', '214', '201',
         'Officia est architecto aspernatur id temporibus. Vero deleniti voluptas voluptatum doloremque quia incidunt ea a.',
         '1979-12-12 11:57:57');
 INSERT INTO `messages` (`id`, `from_user_id`, `to_user_id`, `body`, `created_at`)
@@ -2032,7 +2032,7 @@ VALUES ('102', '202', '202',
         'Aut accusantium explicabo eaque non repellendus voluptas. Enim sapiente omnis non. Praesentium illo reiciendis dolor odit saepe.',
         '1994-08-03 11:53:56');
 INSERT INTO `messages` (`id`, `from_user_id`, `to_user_id`, `body`, `created_at`)
-VALUES ('103', '203', '203',
+VALUES ('103', '201', '203',
         'Iste eveniet velit voluptatum. Dolorem sint maiores vero dolorem ducimus. Nihil a beatae officiis.',
         '1978-01-28 12:39:28');
 INSERT INTO `messages` (`id`, `from_user_id`, `to_user_id`, `body`, `created_at`)
@@ -2411,10 +2411,6 @@ INSERT INTO `messages` (`id`, `from_user_id`, `to_user_id`, `body`, `created_at`
 VALUES ('199', '354', '354',
         'Vel commodi quia nisi animi culpa maiores. Aspernatur ex consequatur molestiae. Quis ut qui ullam aut eum illo dolorem.',
         '2001-10-15 22:53:59');
-INSERT INTO `messages` (`id`, `from_user_id`, `to_user_id`, `body`, `created_at`)
-VALUES ('200', '356', '356',
-        'Alias atque distinctio laboriosam quod inventore. Molestiae eligendi impedit sunt ut. Voluptatem aut possimus voluptatem sit error aut. Voluptatem qui et officia nam labore.',
-        '2004-09-13 10:11:30');
 
 INSERT INTO `likes`
 VALUES (1, 201, 1, '1991-03-29 08:41:37'),
@@ -3318,8 +3314,10 @@ VALUES ('209', '208', 'requested', '2011-08-03 14:41:10', '1991-12-10 20:48:51')
 set @user_id = 201;
 select firstname,
        lastname,
-       (select hometown from profiles where user_id = @user_id)                                               'hometown',
-       (select filename from media where media.id = (select photo_id from profiles where user_id = @user_id)) 'profile_photo'
+       (select hometown from profiles where user_id = @user_id)                    'hometown',
+       (select filename
+        from media
+        where media.id = (select photo_id from profiles where user_id = @user_id)) 'profile_photo'
 from users
 where id = @user_id;
 
@@ -3401,4 +3399,83 @@ where user_id in (
     from friend_requests
     where initiator_user_id = @user_id
       and status = 'approved'
+);
+
+# Пусть задан некоторый пользователь.
+# Из всех друзей этого пользователя найдите человека, который больше всех общался с нашим пользователем
+set @user_id = 201;
+
+select count(*) top_friend_messages_count, user_id
+from (
+         select messages.id, messages.from_user_id as user_id
+         from messages
+         where (messages.from_user_id in (select initiator_user_id
+                                          from friend_requests
+                                          where target_user_id = @user_id
+                                            and status = 'approved'
+                                          union
+                                          select target_user_id
+                                          from friend_requests
+                                          where initiator_user_id = @user_id
+                                            and status = 'approved'))
+         union
+         select messages.id, messages.to_user_id as user_id
+         from messages
+         where (messages.to_user_id in (select initiator_user_id
+                                        from friend_requests
+                                        where target_user_id = @user_id
+                                          and status = 'approved'
+                                        union
+                                        select target_user_id
+                                        from friend_requests
+                                        where initiator_user_id = @user_id
+                                          and status = 'approved'))
+     ) as top
+group by user_id
+order by top_friend_messages_count desc
+limit 1;
+
+# Подсчитать общее количество лайков, которые получили 10 самых молодых пользователей.
+select count(*)
+from (
+         select user_id,
+                (select TIMESTAMPDIFF(YEAR, profiles.birthday, now())
+                 from profiles
+                 where profiles.user_id = likes.user_id) as age
+         from likes
+         where media_id in (select id
+                            from media
+                            where user_id in (
+                                select user_id
+                                from profiles
+                                order by TIMESTAMPDIFF(YEAR, profiles.birthday, now())
+                            ))
+         order by age
+         limit 10
+     ) as top10;
+
+# Определить кто больше поставил лайков (всего) - мужчины или женщины?
+select count(gender),
+       (
+           case (gender)
+               when 'f' then 'female'
+               when 'm' then 'male'
+               end
+           ) as gender
+from profiles
+where user_id in (select user_id from likes)
+group by gender;
+
+# Найти 10 пользователей, которые проявляют наименьшую активность в использовании социальной сети.
+select *
+from users
+where id in (
+    select from_user_id
+    from (
+             select count(*), from_user_id
+             from messages
+             group by from_user_id
+             order by 1
+             limit 10
+         ) as loosers10
 );
