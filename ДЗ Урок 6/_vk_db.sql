@@ -3315,12 +3315,13 @@ VALUES ('209', '208', 'requested', '2011-08-03 14:41:10', '1991-12-10 20:48:51')
 #
 # Проанализировать запросы, которые выполнялись на занятии, определить возможные корректировки и/или улучшения
 #
+set @user_id = 201;
 select firstname,
        lastname,
-       (select hometown from profiles where user_id = 201)                                               'hometown',
-       (select filename from media where media.id = (select photo_id from profiles where user_id = 201)) 'profile_photo'
+       (select hometown from profiles where user_id = @user_id)                                               'hometown',
+       (select filename from media where media.id = (select photo_id from profiles where user_id = @user_id)) 'profile_photo'
 from users
-where id = 201;
+where id = @user_id;
 
 # выбираем фотографии пользователя
 select *
@@ -3345,38 +3346,42 @@ select count(*), user_id
 from media
 group by user_id;
 
+set @user_id = 201;
 select *
 from friend_requests
-where (initiator_user_id = 201 or target_user_id = 201)
+where (initiator_user_id = @user_id or target_user_id = @user_id)
   and status = 'approved';
 
 # выбираем новости друзей
+set @user_id = 201;
 select *
 from media
-where user_id = 201
+where user_id = @user_id
 union
 select *
 from media
 where user_id in (
     select initiator_user_id
     from friend_requests
-    where target_user_id = 201
+    where target_user_id = @user_id
       and status = 'approved'
     union
     select target_user_id
     from friend_requests
-    where initiator_user_id = 201
+    where initiator_user_id = @user_id
       and status = 'approved'
 );
 
 # подсчитываем лайки для моих новостей
+set @user_id = 201;
 select count(*), media_id
 from likes
-where media_id in (select id from media where user_id = 201)
+where media_id in (select id from media where user_id = @user_id)
 group by media_id
 order by 1 desc;
 
 # выводим друзей пользователя с преобразованием пола и возраста
+set @user_id = 201;
 select user_id,
        (
            case (gender)
@@ -3389,11 +3394,11 @@ from profiles
 where user_id in (
     select initiator_user_id
     from friend_requests
-    where target_user_id = 201
+    where target_user_id = @user_id
       and status = 'approved'
     union
     select target_user_id
     from friend_requests
-    where initiator_user_id = 201
+    where initiator_user_id = @user_id
       and status = 'approved'
 );
