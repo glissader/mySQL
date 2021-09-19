@@ -82,6 +82,17 @@ CREATE TABLE orders
     KEY index_of_user_id (user_id)
 ) COMMENT = 'Заказы';
 
+INSERT INTO `orders`
+VALUES (1, 2, '2011-08-22 15:49:39', '2004-10-11 03:17:25'),
+       (2, 3, '2016-10-11 04:31:15', '1999-05-29 02:26:39'),
+       (3, 3, '1986-06-28 09:24:50', '1992-04-20 17:13:26'),
+       (4, 3, '1995-10-28 21:07:14', '1980-06-21 03:29:25'),
+       (5, 5, '1972-12-10 15:31:50', '1984-01-14 10:09:30'),
+       (6, 6, '1992-12-12 10:08:30', '2017-12-27 04:15:43'),
+       (7, 7, '1997-04-28 12:31:26', '1987-08-16 18:39:27'),
+       (8, 7, '2012-01-23 15:45:56', '1977-10-11 09:19:52'),
+       (9, 2, '2010-06-07 04:24:19', '2001-04-02 21:05:30');
+
 DROP TABLE IF EXISTS orders_products;
 CREATE TABLE orders_products
 (
@@ -127,3 +138,13 @@ CREATE TABLE storehouses_products
     created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) COMMENT = 'Запасы на складе';
+
+# Составьте список пользователей users, которые осуществили хотя бы один заказ orders в интернет магазине.
+select *
+from users
+where id in (select distinct user_id from orders);
+
+# Выведите список товаров products и разделов catalogs, который соответствует товару.
+select p.name, c.name
+from products p
+         join catalogs c on p.catalog_id = c.id;
